@@ -63,24 +63,22 @@ pub struct Todo {
 
 impl Todo {
     pub fn new() -> Result<Self, String> {
-        let todo_path: String = match env::var("TODO_PATH") {
-            Ok(t) => t,
-            Err(_) => {
-                let home = env::var("HOME").unwrap();
+        let todo_path: String = env::var("TODO_PATH").unwrap_or_else(|_| {
 
-                // Look for a legacy TODO file path
-                let legacy_todo = format!("{}/TODO", &home);
-                match Path::new(&legacy_todo).exists() {
-                    true => legacy_todo,
-                    false => format!("{}/.todo", &home),
-                }
+            let home = env::var("HOME").unwrap_or_else(|_| {
+                panic!("No home path config. Config a HOME path in env variable!")
+            });
+
+            // Look for a legacy TODO file path
+            let legacy_todo = format!("{}/TODO", &home);
+            match Path::new(&legacy_todo).exists() {
+                true => legacy_todo,
+                false => format!("{}/.todo", &home),
             }
-        };
+        });
 
-        let todo_bak: String = match env::var("TODO_BAK_DIR") {
-            Ok(t) => t,
-            Err(_) => String::from("/tmp/todo.bak"),
-        };
+        let todo_bak: String = env::var("TODO_BAK_DIR")
+            .unwrap_or_else(|_| String::from("/tmp/todo.bak"));
 
         let no_backup = env::var("TODO_NOBACKUP").is_ok();
 
